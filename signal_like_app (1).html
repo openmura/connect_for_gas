@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal風メッセージングアプリ</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f5f5;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .header {
+      background-color: #2C6BED;
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .header-icons {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .header-icons i {
+      cursor: pointer;
+    }
+    
+    .chat-container {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .message {
+      max-width: 70%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      word-wrap: break-word;
+      position: relative;
+      margin-bottom: 5px;
+    }
+    
+    .message-time {
+      font-size: 11px;
+      opacity: 0.7;
+      display: block;
+      margin-top: 4px;
+    }
+    
+    .received {
+      align-self: flex-start;
+      background-color: #f1f1f1;
+      color: black;
+      border-top-left-radius: 4px;
+    }
+    
+    .sent {
+      align-self: flex-end;
+      background-color: #DCF8C6;
+      color: black;
+      border-top-right-radius: 4px;
+    }
+    
+    .input-area {
+      display: flex;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .message-input {
+      flex-grow: 1;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      outline: none;
+      background-color: white;
+      margin-right: 10px;
+    }
+    
+    .send-button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background-color: #2C6BED;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .encryption-notice {
+      text-align: center;
+      padding: 5px;
+      font-size: 12px;
+      color: #888;
+      background-color: #f9f9f9;
+    }
+
+    .contact {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      border-bottom: 1px solid #f1f1f1;
+      cursor: pointer;
+    }
+
+    .contact:hover {
+      background-color: #f9f9f9;
+    }
+
+    .contact-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 20px;
+      color: #555;
+    }
+
+    .contact-info {
+      flex-grow: 1;
+    }
+
+    .contact-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .contact-message {
+      font-size: 14px;
+      color: #888;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-time {
+      font-size: 12px;
+      color: #888;
+      margin-left: 10px;
+    }
+
+    .back-button {
+      cursor: pointer;
+      margin-right: 15px;
+    }
+
+    .screen {
+      height: 100%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .login-screen {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 300px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      background-color: white;
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #2C6BED;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #2C6BED;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #1a5fd9;
+    }
+
+    .status-message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .error {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .online-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #4CAF50;
+      margin-left: 5px;
+      display: inline-block;
+    }
+
+    .typing-indicator {
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+      margin: 5px 0;
+      height: 16px;
+    }
+
+    .add-contact {
+      padding: 15px;
+      border-top: 1px solid #f1f1f1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .add-contact-btn {
+      background-color: #2C6BED;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- ログイン画面 -->
+    <div id="login-screen" class="screen active">
+      <div class="login-screen">
+        <div class="login-container">
+          <h2 class="login-title">Signal風アプリ</h2>
+          <div id="status-message" class="status-message hidden"></div>
+          <div class="form-group">
+            <label for="username">ユーザー名</label>
+            <input type="text" id="username" class="form-control" placeholder="ユーザー名を入力">
+          </div>
+          <div class="form-group">
+            <label for="room">チャットルーム</label>
+            <input type="text" id="room" class="form-control" placeholder="ルーム名を入力">
+          </div>
+          <button class="btn" id="login-btn">ログイン</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 連絡先一覧画面 -->
+    <div id="contacts-screen" class="screen">
+      <div class="header">
+        <h1>メッセージ</h1>
+        <div class="header-icons">
+          <i id="logout-btn">⚙️</i>
+          <i id="new-chat-btn">📝</i>
+        </div>
+      </div>
+      <div id="contacts-list">
+        <!-- チャットルーム一覧がここに表示されます -->
+      </div>
+      <div class="add-contact">
+        <button class="add-contact-btn" id="join-room-btn">新しいルームに参加</button>
+      </div>
+    </div>
+
+    <!-- チャット画面 -->
+    <div id="chat-screen" class="screen">
+      <div class="header">
+        <div class="back-button" onclick="goBack()">←</div>
+        <h1 id="chat-title">チャットルーム</h1>
+        <div class="header-icons">
+          <span id="online-users-count">0</span>
+          <i>⋮</i>
+        </div>
+      </div>
+      <div class="chat-container" id="chat-container">
+        <!-- メッセージはWebSocketで追加されます -->
+      </div>
+      <div id="typing-indicator" class="typing-indicator"></div>
+      <div class="encryption-notice">
+        エンドツーエンド暗号化によって保護されています
+      </div>
+      <div class="input-area">
+        <input type="text" class="message-input" id="message-input" placeholder="メッセージを入力..." autofocus>
+        <button class="send-button" id="send-btn">→</button>
+      </div>
+    </div>
+
+    <!-- 新しいルーム参加画面 -->
+    <div id="new-room-screen" class="screen">
+      <div class="header">
+        <div class="back-button" onclick="goBackToContacts()">←</div>
+        <h1>新しいルームに参加</h1>
+        <div class="header-icons"></div>
+      </div>
+      <div style="padding: 20px;">
+        <div class="form-group">
+          <label for="new-room">ルーム名</label>
+          <input type="text" id="new-room" class="form-control" placeholder="参加したいルーム名を入力">
+        </div>
+        <button class="btn" id="join-new-room-btn">参加する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // WebSocketサーバーのURL（Glitchなどの無料サービスを使用）
+    const WS_URL = "wss://signal-like-app-server.glitch.me";
+    
+    let ws = null;
+    let currentUser = "";
+    let currentRoom = "";
+    let rooms = {}; // ユーザーが参加しているルーム
+    let typingTimeout = null;
+    let isTyping = false;
+    let onlineUsers = {}; // ルームごとのオンラインユーザー
+    
+    // DOMが読み込まれたら実行
+    document.addEventListener("DOMContentLoaded", () => {
+      // ログインボタンのイベントリスナー
+      document.getElementById("login-btn").addEventListener("click", login);
+      
+      // メッセージ送信ボタンのイベントリスナー
+      document.getElementById("send-btn").addEventListener("click", sendMessage);
+      
+      // エンターキーでメッセージを送信
+      document.getElementById("message-input").addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      });
+      
+      // 入力中ステータス
+      document.getElementById("message-input").addEventListener("input", function() {
+        if (!isTyping) {
+          sendTypingStatus(true);
+          isTyping = true;
+        }
+        
+        // 入力が終わったと判断するタイムアウト
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          sendTypingStatus(false);
+          isTyping = false;
+        }, 1000);
+      });
+      
+      // ログアウトボタン
+      document.getElementById("logout-btn").addEventListener("click", logout);
+      
+      // 新規チャットボタン
+      document.getElementById("new-chat-btn").addEventListener("click", showNewRoomScreen);
+      
+      // 新しいルーム参加ボタン
+      document.getElementById("join-room-btn").addEventListener("click", showNewRoomScreen);
+      
+      // 新しいルーム参加確定ボタン
+      document.getElementById("join-new-room-btn").addEventListener("click", joinNewRoom);
+    });
+    
+    // WebSocket接続を初期化
+    function initWebSocket(username, room) {
+      // WebSocketを作成
+      ws = new WebSocket(WS_URL);
+      
+      // 接続が開いたとき
+      ws.onopen = () => {
+        console.log("WebSocket接続が確立されました");
+        
+        // ユーザー登録メッセージを送信
+        ws.send(JSON.stringify({
+          type: "register",
+          username: username,
+          room: room
+        }));
+      };
+      
+      // メッセージを受信したとき
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("受信したメッセージ:", data);
+        
+        switch (data.type) {
+          case "register_success":
+            // 登録成功時の処理
+            currentUser = data.username;
+            currentRoom = data.room;
+            rooms[data.room] = {
+              lastMessage: "",
+              lastTime: new Date().toLocaleTimeString(),
+              unread: 0
+            };
+            
+            showContactsScreen();
+            updateContactsList();
+            showStatusMessage("ログインしました", "success");
+            break;
+            
+          case "message":
+            // メッセージ受信時の処理
+            handleReceivedMessage(data);
+            break;
+            
+          case "user_list":
+            // オンラインユーザーリスト更新
+            onlineUsers[data.room] = data.users;
+            updateOnlineUsersCount();
+            break;
+            
+          case "typing":
+            // 入力中ステータス
+            if (data.username !== currentUser && data.room === currentRoom) {
+              showTypingIndicator(data.username, data.isTyping);
+            }
+            break;
+            
+          case "room_list":
+            // ユーザーが参加している全ルームのリスト
+            data.rooms.forEach(room => {
+              if (!rooms[room]) {
+                rooms[room] = {
+                  lastMessage: "",
+                  lastTime: new Date().toLocaleTimeString(),
+                  unread: 0
+                };
+              }
+            });
+            updateContactsList();
+            break;
+            
+          case "error":
+            // エラー処理
+            showStatusMessage(data.message, "error");
+            break;
+        }
+      };
+      
+      // エラーが発生したとき
+      ws.onerror = (error) => {
+        console.error("WebSocketエラー:", error);
+        showStatusMessage("接続エラーが発生しました", "error");
+      };
+      
+      // 接続が閉じたとき
+      ws.onclose = () => {
+        console.log("WebSocket接続が閉じられました");
+        setTimeout(() => {
+          if (currentUser) {
+            showStatusMessage("再接続しています...", "error");
+            initWebSocket(currentUser, currentRoom);
+          }
+        }, 5000);
+      };
+    }
+    
+    // ログイン処理
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const room = document.getElementById("room").value.trim();
+      
+      if (!username) {
+        showStatusMessage("ユーザー名を入力してください", "error");
+        return;
+      }
+      
+      if (!room) {
+        showStatusMessage("チャットルーム名を入力してください", "error");
+        return;
+      }
+      
+      // WebSocket接続を開始
+      initWebSocket(username, room);
+    }
+    
+    // ログアウト処理
+    
